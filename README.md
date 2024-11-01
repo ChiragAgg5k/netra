@@ -8,11 +8,11 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![Framework](https://img.shields.io/badge/framework-scikit--learn-orange.svg)](https://scikit-learn.org/)
 
-## 🔍 Overview
+## Overview
 
 Netra is an advanced cybercrime classification system that uses Natural Language Processing (NLP) to automatically categorize cybercrime complaints. Built for the IndiaAI CyberGuard Hackathon, it employs dual Random Forest classifiers to simultaneously predict both main categories and subcategories of cybercrime incidents.
 
-## ✨ Key Features
+## Key Features
 
 - Dual-classification system with 89.5% accuracy
 - Advanced text preprocessing pipeline
@@ -20,7 +20,7 @@ Netra is an advanced cybercrime classification system that uses Natural Language
 - Automated model retraining capabilities
 - Privacy-preserving feature extraction
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -55,7 +55,7 @@ text = "Someone created a fake profile using my photos on Instagram"
 category, subcategory = classifier.predict(text)
 ```
 
-## 📋 Requirements
+## Requirements
 
 ```text
 python = "^3.11"
@@ -66,9 +66,8 @@ seaborn = "^0.13.2"
 numpy = "^2.1.2"
 ```
 
-## 📞 Contact
+## Contact
 
 For any queries or support:
 - Email: chiragaggarwal5k@gmail.com
 - GitHub Issues: [Create an issue](https://github.com/yourusername/netra/issues)
-

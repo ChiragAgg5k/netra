@@ -7,6 +7,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 from sklearn.metrics import classification_report, confusion_matrix
+from tqdm import tqdm
 
 from cybercrime_classifier import CybercrimeClassifier
 
@@ -43,6 +44,7 @@ def test_model(model_path):
         test_df = pd.read_csv("data/test.csv")
 
         # Preprocess test data
+        logging.info("Preprocessing test data...")
         test_df = classifier.prepare_data(test_df)
 
         # Get predictions and true values
@@ -60,11 +62,12 @@ def test_model(model_path):
         
         with open(metrics_file, "w") as f:
             for column in ['category', 'subcategory']:
-                # Get predictions for current model
+                # Get predictions for current model with tqdm progress bar
+                logging.info(f"Generating predictions for {column}...")
                 predictions = []
                 probabilities = []
                 
-                for text in X_test:
+                for text in tqdm(X_test, desc=f"Predicting {column}", unit="sample"):
                     pred = classifier.predict(text)
                     predictions.append(pred[column])
                     probabilities.append(pred[f"{column}_confidence"])
@@ -118,10 +121,10 @@ def test_model(model_path):
         examples_file = f"example_predictions_{timestamp}.txt"
         with open(examples_file, "w") as f:
             f.write("Example Predictions:\n\n")
-            for idx in sample_indices:
+            for idx in tqdm(sample_indices, desc="Generating Example Predictions", unit="sample"):
                 text = test_df.iloc[idx]["crimeaditionalinfo"]
                 true_cat = test_df.iloc[idx]["category"]
-                true_subcat = test_df.iloc[idx]["subcategory"]  # Changed from sub_category
+                true_subcat = test_df.iloc[idx]["subcategory"]
 
                 prediction = classifier.predict(text)
 

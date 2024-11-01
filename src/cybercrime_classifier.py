@@ -14,6 +14,14 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from tqdm.auto import tqdm
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.FileHandler("testing.log"), logging.StreamHandler()],
+)
 
 
 class CybercrimeClassifier:
@@ -102,9 +110,18 @@ class CybercrimeClassifier:
             return ""  # Return empty string in case of error
 
     def prepare_data(self, df):
-        """Prepare the data for training"""
+        """Prepare the data for training with additional validation"""
         # Ensure column names are correct
         df = df.rename(columns={'sub_category': 'subcategory'})
+        
+        # Add Unknown category for handling unseen labels
+        for column in ['category', 'subcategory']:
+            if 'Unknown' not in df[column].unique():
+                # Add a single example of Unknown category
+                unknown_row = df.iloc[0].copy()
+                unknown_row[column] = 'Unknown'
+                unknown_row['crimeaditionalinfo'] = 'unknown case'
+                df = pd.concat([df, pd.DataFrame([unknown_row])], ignore_index=True)
         
         # Analyze initial class distribution
         self.analyze_class_distribution(df)
@@ -198,7 +215,7 @@ class CybercrimeClassifier:
             raise
 
     def predict(self, text):
-        """Predict category and subcategory for new text"""
+        """Predict category and subcategory for new text with handling for unseen labels"""
         try:
             # Preprocess the input text
             processed_text = self.preprocess_text(text)
@@ -209,19 +226,38 @@ class CybercrimeClassifier:
                 if self.models[column] is None:
                     raise ValueError(f"Model for {column} is not trained")
                 
-                # Get prediction and probabilities
-                prediction = self.models[column].predict([processed_text])[0]
-                probas = self.models[column].predict_proba([processed_text])[0]
+                try:
+                    # Get prediction and probabilities
+                    prediction = self.models[column].predict([processed_text])[0]
+                    probas = self.models[column].predict_proba([processed_text])[0]
+                    
+                    # Ensure prediction is within known labels
+                    max_classes = len(self.label_encoders[column].classes_)
+                    if prediction >= max_classes:
+                        # !TODO: Handle this case
+                        continue
+                    
+                    # Convert prediction to label
+                    results[column] = self.label_encoders[column].classes_[prediction]
+                    results[f"{column}_confidence"] = float(probas[prediction])
                 
-                # Convert prediction to label
-                results[column] = self.label_encoders[column].inverse_transform([prediction])[0]
-                results[f"{column}_confidence"] = float(probas[prediction])
+                except Exception as e:
+                    logging.error(f"Error predicting {column}: {str(e)}")
+                    # Fallback to "Unknown" category with 0 confidence
+                    results[column] = "Unknown"
+                    results[f"{column}_confidence"] = 0.0
 
             return results
 
         except Exception as e:
-            print(f"Error during prediction: {str(e)}", file=sys.stderr)
-            raise
+            logging.error(f"Error during prediction: {str(e)}")
+            # Return a complete result structure even in case of error
+            return {
+                "category": "Unknown",
+                "category_confidence": 0.0,
+                "subcategory": "Unknown",
+                "subcategory_confidence": 0.0
+            }
 
     def save_model(self, path):
         """Save the trained model and label encoders"""
