@@ -10,7 +10,6 @@ from nltk.tokenize import word_tokenize
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report
-from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
 from tqdm.auto import tqdm
@@ -35,7 +34,7 @@ class CybercrimeClassifier:
         self.stop_words = set(stopwords.words("english"))
         self.label_encoders = {
             "category": LabelEncoder(),
-            "subcategory": LabelEncoder(),  # Changed from sub_category to subcategory
+            "subcategory": LabelEncoder(),
         }
         self.models = {
             "category": None,
@@ -169,44 +168,45 @@ class CybercrimeClassifier:
             ))
         ])
 
-    def train(self, df):
-        """Train the model"""
+    def train(self, train_df, test_df=None):
+        """Train the model using separate train and test files"""
         try:
-            # Prepare data
-            prepared_df = self.prepare_data(df)
+            # Prepare training data
+            prepared_train_df = self.prepare_data(train_df)
             
-            if len(prepared_df) < self.min_samples_per_class * 2:
+            if len(prepared_train_df) < self.min_samples_per_class * 2:
                 raise ValueError(f"Not enough samples for training. Need at least {self.min_samples_per_class * 2} samples.")
             
-            # Split features
-            X = prepared_df['processed_text']
+            # Split features for training
+            X_train = prepared_train_df['processed_text']
             
             # Train separate models for category and subcategory
             for column in ['category', 'subcategory']:
                 print(f"\nTraining {column} model...", file=sys.stderr)
-                y = prepared_df[f'{column}_encoded']
-                
-                # Split into train and test sets
-                X_train, X_test, y_train, y_test = train_test_split(
-                    X, y,
-                    test_size=0.2,
-                    random_state=42,
-                    stratify=y
-                )
+                y_train = prepared_train_df[f'{column}_encoded']
                 
                 # Build and train the model
                 self.models[column] = self.build_model(self.label_encoders[column].classes_)
                 self.models[column].fit(X_train, y_train)
                 
-                # Print evaluation metrics
-                y_pred = self.models[column].predict(X_test)
-                print(f"\n{column.upper()} Classification Report:", file=sys.stderr)
-                print(classification_report(
-                    y_test,
-                    y_pred,
-                    target_names=self.label_encoders[column].classes_,
-                    zero_division=1
-                ))
+                # Evaluate on test data if provided
+                if test_df is not None:
+                    # Prepare test data with the same preprocessing
+                    prepared_test_df = self.prepare_data(test_df)
+                    X_test = prepared_test_df['processed_text']
+                    y_test = prepared_test_df[f'{column}_encoded']
+                    
+                    # Make predictions
+                    y_pred = self.models[column].predict(X_test)
+                    
+                    # Print evaluation metrics
+                    print(f"\n{column.upper()} Classification Report:", file=sys.stderr)
+                    print(classification_report(
+                        y_test,
+                        y_pred,
+                        target_names=self.label_encoders[column].classes_,
+                        zero_division=1
+                    ))
             
             return True
 

@@ -60,24 +60,41 @@ This system is designed to streamline the complaint categorization process on th
 
 ### 2. Model Documentation
 
-![Data pipeline](./images/data-pipeline.png)
-
-### Data Visualization
-
-![Data Visualization of Cybercrime Categories](./images/cybercrime_categories.png)
-
-![Data Visualization of Cybercrime Subcategories](./images/cybercrime_subcategories.png)
-
 #### 2.2 Data Preprocessing
 
 Our preprocessing pipeline implements several crucial steps to ensure optimal text classification:
 
 **Text Cleaning:**
 
-- Removal of special characters and numbers using regex
-- Removal of extra whitespace and punctuation
-- Handling of contractions (e.g., converting "don't" to "do not")
-- Filtering out non-alphanumeric characters while preserving spaces
+- Removal of `Null` values:
+
+   ```
+   category                 0
+   sub_category          6591
+   crimeaditionalinfo      21
+   ```
+- Ignoring classes with less than minimum samples:
+```
+category:
+Report Unlawful Content    1
+Unknown                    1
+
+sub_category:
+Against Interest of sovereignty or integrity of India    1
+```
+
+- Filtering out rare classes
+
+Final class distribution:
+
+```
+Total samples: 92463
+Number of categories: 15
+Number of sub-categories: 36
+```
+
+![Data Distribution of Cybercrime Categories](./images/cybercrime_categories.png)
+![Data Distribution of Cybercrime Subcategories](./images/cybercrime_subcategories.png)
 
 **NLP Processing:**
 
@@ -93,6 +110,8 @@ Our preprocessing pipeline implements several crucial steps to ensure optimal te
 - Sentiment analysis features
 - Text length and complexity metrics
 - Custom cybercrime-specific feature extractors
+
+![Data pipeline](./images/data-pipeline.png)
 
 #### 2.3 Model Architecture
 
