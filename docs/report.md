@@ -1,28 +1,60 @@
 # IndiaAI CyberGuard AI Hackathon Submission
-## Stage 1: NLP Model for Text Analytics and Classification
+
+## Netra - Vigilant AI for a Safer Digital India
 
 ### Team Details
-**Team Name**: Netra  
+**Team Name**: Netra
 **Organization Type**: Academic
 **Organization Name**: Bennett University
 
 **Team Members**:\
 1. Chirag Aggarwal\
    - Role: Team Leader & ML Engineer\
-   - Expertise: Deep Learning, Computer Vision, Natural Language Processing\
+   - Expertise: Deep Learning, Computer Vision, LLMs\
    - Contact: chiragaggarwal5k@gmail.com\
-   - GitHub: [Add GitHub profile]\
-   - LinkedIn: [Add LinkedIn profile]
+   - GitHub: https://github.com/ChiragAgg5k\
+   - LinkedIn: https://www.linkedin.com/in/chiragagg5k/
+
+2. Vaibhavee Singh\
+   - Role: ML Engineer, NLP Specialist\
+   - Expertise: Natural Language Processing\
+   - Contact: vaibhaveesingh89@gmail.com\
+   - GitHub: https://github.com/Vaibhavee89
+   - LinkedIn: https://www.linkedin.com/in/vaibhavee-singh-1b7996252//
+   - Publications: https://ieeexplore.ieee.org/author/950203643962224
 
 ### 1. Project Overview
-Our solution addresses the critical challenge of categorizing cybercrime complaints using advanced Natural Language Processing (NLP) techniques. We've developed a dual-classification system that simultaneously predicts both the main category and subcategory of cybercrime incidents, enabling more efficient processing and routing of complaints on the National Cybercrime Report Portal (NCRP).
+Our solution addresses the critical challenge of categorizing cybercrime complaints using advanced Natural Language Processing (NLP) techniques. We've developed a dual-classification system powered by Random Forest classifiers that simultaneously predicts both the main category and subcategory of cybercrime incidents based on complaint descriptions.
 
 #### Key Features:
-- Real-time text analysis and classification
-- Multi-label classification for comprehensive categorization
-- Robust handling of Indian language patterns and regional variations
-- Scalable architecture supporting high throughput (~6,000 daily cases)
-- Adherence to Government of India's data protection and cybersecurity guidelines
+- **Robust Text Preprocessing Pipeline**:
+  - Advanced text cleaning with special character removal
+  - NLTK-based tokenization and lemmatization
+  - Stop word removal and length filtering for improved signal
+  - Support for handling non-standard text input
+
+- **Intelligent Classification System**:
+  - Dual Random Forest classifiers for category and subcategory prediction
+  - TF-IDF vectorization with bi-gram support (up to 5000 features)
+  - Confidence scores for each prediction
+  - Balanced class weights to handle imbalanced categories
+
+- **Data Quality Management**:
+  - Automatic filtering of rare categories (configurable minimum samples)
+  - Class distribution analysis and reporting
+  - Empty text handling and validation
+  - Stratified train-test splitting for reliable evaluation
+
+- **Production-Ready Features**:
+  - Model persistence using joblib for easy deployment
+  - Comprehensive error handling and logging
+  - Memory-efficient processing using pipelines
+  - Progress tracking for long-running operations
+  - Parallel processing support for model training
+
+This system is designed to streamline the complaint categorization process on the National Cybercrime Report Portal (NCRP), enabling faster response times and more accurate routing of cybercrime reports to appropriate authorities.
+
+![Overview](./images/overview.png)
 
 ### 2. Model Documentation
 
@@ -63,19 +95,8 @@ def clean_text(text):
    - Ensemble voting system
 
 **Architecture Diagram:**
-```mermaid
-graph TD
-    A[Input Text] --> B[Text Preprocessing]
-    B --> C[Feature Extraction]
-    C --> D[TF-IDF Vectorization]
-    D --> E[Random Forest Classifier]
-    D --> F[BERT Model]
-    D --> G[Logistic Regression]
-    E --> H[Ensemble Voting]
-    F --> H
-    G --> H
-    H --> I[Final Classification]
-```
+
+![Architecture](./images/architecture.png)
 
 #### 2.3 Implementation Details
 **Training Configuration:**

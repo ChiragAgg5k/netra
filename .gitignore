@@ -169,3 +169,6 @@ data
 
 # Saved models
 *.joblib
+
+# Ruff
+.ruff_cache

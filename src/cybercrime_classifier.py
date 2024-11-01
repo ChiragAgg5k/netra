@@ -1,20 +1,19 @@
+import re
+import sys
+
+import joblib
+import nltk
 import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-import re
-import joblib
-from sklearn.ensemble import RandomForestClassifier
 from tqdm.auto import tqdm
-import sys
-from collections import Counter
 
 
 class CybercrimeClassifier:
