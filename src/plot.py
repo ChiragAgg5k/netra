@@ -115,7 +115,7 @@ def main():
         'Report Unlawful Content': 1
     }
     
-    subcategory_data = {
+    sub_category_data = {
         'UPI Related Frauds': 26479,
         'Other': 10727,
         'DebitCredit Card FraudSim Swap Fraud': 10690,
@@ -137,7 +137,7 @@ def main():
                         'Distribution of Cybercrime Categories',
                         'cybercrime_categories.png')
     
-    create_category_plot(subcategory_data,
+    create_category_plot(sub_category_data,
                         'Top 15 Cybercrime Sub-Categories',
                         'cybercrime_subcategories.png')
     

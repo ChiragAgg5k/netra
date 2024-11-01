@@ -34,11 +34,11 @@ class CybercrimeClassifier:
         self.stop_words = set(stopwords.words("english"))
         self.label_encoders = {
             "category": LabelEncoder(),
-            "subcategory": LabelEncoder(),
+            "sub_category": LabelEncoder(),
         }
         self.models = {
             "category": None,
-            "subcategory": None
+            "sub_category": None
         }
         self.min_samples_per_class = min_samples_per_class
 
@@ -46,7 +46,7 @@ class CybercrimeClassifier:
         """Analyze and print class distribution information"""
         print("\nClass Distribution Analysis:", file=sys.stderr)
         
-        for column in ['category', 'subcategory']:
+        for column in ['category', 'sub_category']:
             counts = df[column].value_counts()
             print(f"\n{column.upper()} Distribution:", file=sys.stderr)
             print(f"Total unique classes: {len(counts)}", file=sys.stderr)
@@ -64,8 +64,8 @@ class CybercrimeClassifier:
         
         original_len = len(df)
         
-        # Filter both category and subcategory
-        for column in ['category', 'subcategory']:
+        # Filter both category and sub_category
+        for column in ['category', 'sub_category']:
             counts = df[column].value_counts()
             valid_classes = counts[counts >= self.min_samples_per_class].index
             df = df[df[column].isin(valid_classes)]
@@ -110,14 +110,9 @@ class CybercrimeClassifier:
 
     def prepare_data(self, df):
         """Prepare the data for training with additional validation"""
-        # Ensure column names are correct
-        df = df.rename(columns={
-        'sub_category': 'subcategory',
-        'crimeaditionalinfo': 'processed_text'
-    })
         
         # Add Unknown category for handling unseen labels
-        for column in ['category', 'subcategory']:
+        for column in ['category', 'sub_category']:
             if 'Unknown' not in df[column].unique():
                 # Add a single example of Unknown category
                 unknown_row = df.iloc[0].copy()
@@ -148,7 +143,7 @@ class CybercrimeClassifier:
         
         # Encode labels
         print("\nEncoding labels...", file=sys.stderr)
-        for column in ['category', 'subcategory']:
+        for column in ['category', 'sub_category']:
             df[f'{column}_encoded'] = self.label_encoders[column].fit_transform(df[column])
             print(f"Number of unique {column}s: {len(self.label_encoders[column].classes_)}", file=sys.stderr)
         
@@ -183,8 +178,8 @@ class CybercrimeClassifier:
             # Split features for training
             X_train = prepared_train_df['processed_text']
             
-            # Train separate models for category and subcategory
-            for column in ['category', 'subcategory']:
+            # Train separate models for category and sub_category
+            for column in ['category', 'sub_category']:
                 print(f"\nTraining {column} model...", file=sys.stderr)
                 y_train = prepared_train_df[f'{column}_encoded']
                 
@@ -218,14 +213,14 @@ class CybercrimeClassifier:
             raise
 
     def predict(self, text):
-        """Predict category and subcategory for new text with handling for unseen labels"""
+        """Predict category and sub_category for new text with handling for unseen labels"""
         try:
             # Preprocess the input text
             processed_text = self.preprocess_text(text)
 
             results = {}
             # Make predictions for each model
-            for column in ['category', 'subcategory']:
+            for column in ['category', 'sub_category']:
                 if self.models[column] is None:
                     raise ValueError(f"Model for {column} is not trained")
                 
@@ -258,8 +253,8 @@ class CybercrimeClassifier:
             return {
                 "category": "Unknown",
                 "category_confidence": 0.0,
-                "subcategory": "Unknown",
-                "subcategory_confidence": 0.0
+                "sub_category": "Unknown",
+                "sub_category_confidence": 0.0
             }
 
     def save_model(self, path):
@@ -308,7 +303,7 @@ def main():
         print("\nSample Prediction:", file=sys.stderr)
         print("Sample Text:", sample_text, file=sys.stderr)
         print(f"Category: {prediction['category']} (confidence: {prediction['category_confidence']:.2%})", file=sys.stderr)
-        print(f"Subcategory: {prediction['subcategory']} (confidence: {prediction['subcategory_confidence']:.2%})", file=sys.stderr)
+        print(f"sub_category: {prediction['sub_category']} (confidence: {prediction['sub_category_confidence']:.2%})", file=sys.stderr)
 
     except Exception as e:
         print(f"Error in main: {str(e)}", file=sys.stderr)

@@ -52,7 +52,7 @@ classifier = CybercrimeClassifier()
 
 # Predict category for a complaint
 text = "Someone created a fake profile using my photos on Instagram"
-category, subcategory = classifier.predict(text)
+category, sub_category = classifier.predict(text)
 ```
 
 ## Requirements

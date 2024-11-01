@@ -33,13 +33,13 @@ def main():
                 continue
 
             try:
-                # Predict category and subcategory
+                # Predict category and sub_category
                 prediction = classifier.predict(user_input)
 
                 # Display results
                 print("\n--- Prediction Results ---")
                 print(f"Category: {prediction['category']} (Confidence: {prediction['category_confidence']:.2%})")
-                print(f"Subcategory: {prediction['subcategory']} (Confidence: {prediction['subcategory_confidence']:.2%})")
+                print(f"sub_category: {prediction['sub_category']} (Confidence: {prediction['sub_category_confidence']:.2%})")
 
             except Exception as e:
                 print(f"Prediction error: {e}")

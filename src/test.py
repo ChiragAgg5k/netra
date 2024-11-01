@@ -44,7 +44,7 @@ def test_model(model_path):
         test_df = pd.read_csv("data/test.csv")
 
         test_df = test_df.rename(columns={
-            'sub_category': 'subcategory', 
+            'sub_category': 'sub_category', 
             'crimeaditionalinfo': 'processed_text'
         })
 
@@ -66,7 +66,7 @@ def test_model(model_path):
         metrics_file = f"test_metrics_{timestamp}.txt"
         
         with open(metrics_file, "w") as f:
-            for column in ['category', 'subcategory']:
+            for column in ['category', 'sub_category']:
                 # Get predictions for current model with tqdm progress bar
                 logging.info(f"Generating predictions for {column}...")
                 predictions = []
@@ -129,7 +129,7 @@ def test_model(model_path):
             for idx in tqdm(sample_indices, desc="Generating Example Predictions", unit="sample"):
                 text = test_df.iloc[idx]["crimeaditionalinfo"]
                 true_cat = test_df.iloc[idx]["category"]
-                true_subcat = test_df.iloc[idx]["subcategory"]
+                true_subcat = test_df.iloc[idx]["sub_category"]
 
                 prediction = classifier.predict(text)
 
@@ -138,9 +138,9 @@ def test_model(model_path):
                 f.write(f"True Category: {true_cat}\n")
                 f.write(f"Predicted Category: {prediction['category']}\n")
                 f.write(f"Category Confidence: {prediction['category_confidence']:.2%}\n")
-                f.write(f"True Subcategory: {true_subcat}\n")
-                f.write(f"Predicted Subcategory: {prediction['subcategory']}\n")
-                f.write(f"Subcategory Confidence: {prediction['subcategory_confidence']:.2%}\n\n")
+                f.write(f"True sub_category: {true_subcat}\n")
+                f.write(f"Predicted sub_category: {prediction['sub_category']}\n")
+                f.write(f"sub_category Confidence: {prediction['sub_category_confidence']:.2%}\n\n")
 
         logging.info("Testing completed successfully")
         logging.info(f"Metrics saved to: {metrics_file}")
