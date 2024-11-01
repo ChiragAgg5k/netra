@@ -43,6 +43,11 @@ def test_model(model_path):
         logging.info("Loading test data...")
         test_df = pd.read_csv("data/test.csv")
 
+        test_df = test_df.rename(columns={
+            'sub_category': 'subcategory', 
+            'crimeaditionalinfo': 'processed_text'
+        })
+
         # Preprocess test data
         logging.info("Preprocessing test data...")
         test_df = classifier.prepare_data(test_df)

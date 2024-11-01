@@ -10,126 +10,89 @@
 
 **Team Members**:
 
-1. Chirag Aggarwal
-    - Role: Team Leader & ML Engineer
-    - Expertise: Deep Learning, Computer Vision, LLMs
-    - Contact: chiragaggarwal5k@gmail.com
-    - GitHub: [ChiragAgg5k](https://github.com/ChiragAgg5k)
-    - LinkedIn: [chiragagg5k](https://www.linkedin.com/in/chiragagg5k/)
+1. **Chirag Aggarwal**
+    - *Role*: Team Leader & ML Engineer
+    - *Expertise*: Deep Learning, Computer Vision, LLMs
+    - *Contact*: [chiragaggarwal5k@gmail.com](mailto:chiragaggarwal5k@gmail.com)
+    - *GitHub*: [ChiragAgg5k](https://github.com/ChiragAgg5k)
+    - *LinkedIn*: [chiragagg5k](https://www.linkedin.com/in/chiragagg5k/)
 
-2. Vaibhavee Singh
-    - Role: ML Engineer, NLP Specialist
-    - Expertise: Natural Language Processing
-    - Contact: vaibhaveesingh89@gmail.com
-    - GitHub: [Vaibhavee89](https://github.com/Vaibhavee89)
-    - LinkedIn: [vaibhavee-singh](https://www.linkedin.com/in/vaibhavee-singh-1b7996252/)
-    - Publications: [IEEE Profile](https://ieeexplore.ieee.org/author/950203643962224)
+2. **Vaibhavee Singh**
+    - *Role*: ML Engineer, NLP Specialist
+    - *Expertise*: Natural Language Processing
+    - *Contact*: [vaibhaveesingh89@gmail.com](mailto:vaibhaveesingh89@gmail.com)
+    - *GitHub*: [Vaibhavee89](https://github.com/Vaibhavee89)
+    - *LinkedIn*: [vaibhavee-singh](https://www.linkedin.com/in/vaibhavee-singh-1b7996252/)
+    - *Publications*: [IEEE Profile](https://ieeexplore.ieee.org/author/950203643962224)
 
 ### 1. Project Overview
 
 Our solution addresses the critical challenge of categorizing cybercrime complaints using advanced Natural Language Processing (NLP) techniques. We've developed a dual-classification system powered by Random Forest classifiers that simultaneously predicts both the main category and subcategory of cybercrime incidents based on complaint descriptions.
 
-#### Key Features:
+#### Key Features
 
-- **Robust Text Preprocessing Pipeline**:
-    - Character-level cleaning with regex pattern r"[^a-zA-Z\s]"
+- **Robust Text Preprocessing Pipeline**
+    - Character-level cleaning with advanced regex patterns
     - NLTK-based tokenization with WordNet lemmatization
-    - Minimum token length threshold: > 2 characters
-    - Configurable minimum samples per class (default: 5)
+    - Configurable text preprocessing parameters
+    - Minimum token length threshold and sample filtering
 
-- **Intelligent Classification System**:
-    - Dual Random Forest classifiers for category and subcategory prediction
-    - TF-IDF vectorization with bi-gram support (up to 5000 features)
-    - N-gram range: (1, 2) for capturing phrase patterns
-    - Document frequency bounds: min_df=2, max_df=0.95
+- **Intelligent Classification System**
+    - Dual Random Forest classifiers for precise categorization
+    - TF-IDF vectorization with advanced feature extraction
+    - Sophisticated n-gram pattern recognition
+    - Dynamic document frequency management
 
-- **Data Quality Management**:
-    - Automatic filtering of rare categories (configurable minimum samples)
-    - Class distribution analysis and reporting
-    - Empty text handling and validation
-    - Stratified train-test splitting for reliable evaluation
+- **Data Quality Management**
+    - Automatic filtering and handling of rare categories
+    - Comprehensive class distribution analysis
+    - Robust error handling and validation mechanisms
+    - Stratified data splitting for reliable model evaluation
 
-- **Production-Ready Features**:
-    - Model persistence using joblib for easy deployment
-    - Comprehensive error handling and logging
-    - Memory-efficient processing using pipelines
-    - Progress tracking for long-running operations
-    - Parallel processing support for model training
+- **Production-Ready Architecture**
+    - Model persistence with efficient serialization
+    - Comprehensive logging and monitoring
+    - Memory-optimized processing pipelines
+    - Parallel computing support
 
-This system is designed to streamline the complaint categorization process on the National Cybercrime Report Portal (NCRP), enabling faster response times and more accurate routing of cybercrime reports to appropriate authorities.
+### 2. Technical Methodology
 
-### 2. Model Documentation
+#### 2.1 Data Preprocessing
 
-#### 2.2 Data Preprocessing
+**Data Cleaning Insights**:
 
-Our preprocessing pipeline implements several crucial steps to ensure optimal text classification:
-
-**Text Cleaning:**
-
-- Removal of `Null` values:
-
-   ```
-   category                 0
-   sub_category          6591
-   crimeaditionalinfo      21
-   ```
-- Ignoring classes with less than minimum samples:
-```
-category:
-Report Unlawful Content    1
-Unknown                    1
-
-sub_category:
-Against Interest of sovereignty or integrity of India    1
-```
-
-- Filtering out rare classes
-
-Final class distribution:
-
-```
-Total samples: 92463
-Number of categories: 15
-Number of sub-categories: 36
-```
+| Metric | Value |
+|--------|-------|
+| Null Values | Category: 0, Sub-Category: 6,591 |
+| Ignored Classes | Category: 2, Sub-Category: 1 |
+| Total Samples | 92,463 |
+| Total Categories | 15 |
+| Total Sub-Categories | 36 |
 
 ![Data Distribution of Cybercrime Categories](./images/cybercrime_categories.png)
 ![Data Distribution of Cybercrime Subcategories](./images/cybercrime_subcategories.png)
 
-**NLP Processing:**
-
-- Tokenization using NLTK's word_tokenize
-- Custom stop words list including domain-specific terms
+**NLP Processing Techniques**:
+- Advanced tokenization
+- Custom stop words filtering
 - WordNet lemmatization with POS tagging
-- N-gram feature extraction (unigrams, bigrams, trigrams)
-
-**Feature Engineering:**
-
-- TF-IDF vectorization with optimized parameters
-- Document frequency filtering
-- Sentiment analysis features
-- Text length and complexity metrics
-- Custom cybercrime-specific feature extractors
+- Multi-level n-gram feature extraction
 
 ![Data pipeline](./images/data-pipeline.png)
 
-#### 2.3 Model Architecture
+#### 2.2 Model Architecture
 
-**Primary Model Stack:**
-
-1. Base Model: Random Forest Classifier
-2. Supporting Models:
-    - BERT for complex cases
-    - Logistic Regression for fast classification
-    - Ensemble voting system
-
-**Architecture Diagram:**
+**Model Composition**:
+1. **Primary Model**: Random Forest Classifier
+2. **Supporting Models**:
+    - BERT for complex classification scenarios
+    - Logistic Regression for rapid inference
+    - Ensemble voting mechanism
 
 ![Architecture Diagram of the Model Stack and Workflow](./images/architecture.png)
 
-#### Implementation Details
 
-**Training Configuration:**
+**Training Configuration**:
 
 ```python
 rf_params = {
@@ -151,70 +114,50 @@ tfidf_params = {
 }
 ```
 
-#### 2.4 Performance Metrics
+#### 2.3 Performance Metrics
 
-**Model Evaluation Results:**
+| Metric | Value |
+|--------|-------|
+| Accuracy | 89.5% |
+| Precision | 87.3% |
+| Recall | 86.9% |
+| F1-Score | 87.1% |
+| AUC-ROC | 0.912 |
 
-- Accuracy: 89.5%
-- Precision: 87.3%
-- Recall: 86.9%
-- F1-Score: 87.1%
-- AUC-ROC: 0.912
+### 3. Key Insights
 
-**Confusion Matrix:**
+#### 3.1 Cybercrime Category Distribution
 
-```
-[[952  48  32  18]
- [ 43 867  29  21]
- [ 38  31 891  40]
- [ 22  19  35 924]]
-```
+1. **Financial Fraud**: 42%
+2. **Identity Theft**: 28%
+3. **Social Media Crime**: 18%
+4. **Other Categories**: 12%
 
-### 3. Key Findings
+#### 3.2 Performance Observations
+- Exceptional accuracy in financial fraud detection (92%)
+- Challenges in rapidly evolving social media crime terminology
+- Robust handling of linguistic diversity
 
-#### 3.1 Data Insights
+### 4. Deployment Strategy
 
-- Most common cybercrime categories:
-    1. Financial Fraud (42%)
-    2. Identity Theft (28%)
-    3. Social Media Crime (18%)
-    4. Others (12%)
+#### 4.1 Phased Implementation
 
-#### 3.2 Model Performance Analysis
-
-- Superior performance on financial fraud cases (92% accuracy)
-- Challenge areas identified in social media crimes due to evolving terminology
-- Robust handling of regional language variations
-
-### 4. Implementation Plan
-
-#### 4.1 Deployment Strategy
-
-1. **Phase 1: Integration (Week 1-2)**
-    - API development
-    - Load testing
-    - Security implementation
-
-2. **Phase 2: Testing (Week 3-4)**
-    - User acceptance testing
-    - Performance optimization
-    - Security audits
-
-3. **Phase 3: Production (Week 5-6)**
-    - Gradual rollout
-    - Monitoring setup
-    - Documentation completion
+| Phase | Duration | Key Activities |
+|-------|----------|----------------|
+| Integration | Week 1-2 | API development, load testing, security implementation |
+| Testing | Week 3-4 | User acceptance, performance optimization, security audits |
+| Production | Week 5-6 | Gradual rollout, monitoring setup, documentation |
 
 #### 4.2 Scalability Features
-
-- Containerized deployment using Docker
-- Kubernetes orchestration for scaling
-- Redis caching for improved performance
+- Containerized deployment with Docker
+- Kubernetes orchestration
+- Redis caching mechanism
 - Automated model retraining pipeline
 
 ### 5. Technical Dependencies
 
-```text
+```toml
+[dependencies]
 python = "^3.11"
 nltk = "^3.9.1"
 pandas = "^2.2.3"
@@ -223,30 +166,28 @@ seaborn = "^0.13.2"
 numpy = "^2.1.2"
 ```
 
-### 6. Responsible AI Compliance
+### 6. Responsible AI Framework
 
 #### 6.1 Ethical Considerations
-
-- Bias detection and mitigation systems implemented
-- Regular fairness audits across demographic groups
+- Advanced bias detection and mitigation
+- Regular fairness audits
 - Transparent decision-making process
 - Privacy-preserving feature extraction
 
-#### 6.2 Data Governance
+#### 6.2 Data Governance Compliance
+- Alignment with Personal Data Protection Bill
+- End-to-end encryption
+- Automated PII detection
+- Periodic privacy impact assessments
 
-- Compliance with Personal Data Protection Bill
-- End-to-end encryption of sensitive information
-- Automated PII detection and masking
-- Regular privacy impact assessments
+### 7. Originality Declaration
 
-### 7. Plagiarism Declaration
-
-We hereby declare that this submission is our original work. All external resources have been properly cited, and we have adhered to the ethical guidelines set forth by IndiaAI. Our solution has been developed specifically for this hackathon and has not been previously submitted elsewhere.
+We affirm that this submission represents our original work. All external resources are appropriately cited, and we have strictly adhered to the ethical guidelines of the IndiaAI hackathon.
 
 ### 8. References
 
-1. Devlin, J., et al. (2019). BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding. NAACL-HLT 2019.
-2. Scikit-learn: Machine Learning in Python, Pedregosa et al., JMLR 12, pp. 2825-2830, 2011.
-3. Natural Language Toolkit: Bird, Steven, Edward Loper and Ewan Klein (2009).
-4. Government of India. (2023). Guidelines for Responsible AI Development.
-5. Ministry of Electronics and IT. (2023). Cybersecurity Framework for Digital India.
+1. Devlin, J., et al. (2019). "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding". *NAACL-HLT 2019*.
+2. Pedregosa, F., et al. (2011). "Scikit-learn: Machine Learning in Python". *Journal of Machine Learning Research*, 12, 2825-2830.
+3. Bird, S., Loper, E., & Klein, E. (2009). *Natural Language Toolkit*.
+4. Government of India. (2023). *Guidelines for Responsible AI Development*.
+5. Ministry of Electronics and IT. (2023). *Cybersecurity Framework for Digital India*.

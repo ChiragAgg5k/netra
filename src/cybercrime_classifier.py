@@ -111,7 +111,10 @@ class CybercrimeClassifier:
     def prepare_data(self, df):
         """Prepare the data for training with additional validation"""
         # Ensure column names are correct
-        df = df.rename(columns={'sub_category': 'subcategory'})
+        df = df.rename(columns={
+        'sub_category': 'subcategory',
+        'crimeaditionalinfo': 'processed_text'
+    })
         
         # Add Unknown category for handling unseen labels
         for column in ['category', 'subcategory']:
