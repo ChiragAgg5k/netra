@@ -4,7 +4,6 @@
 
 ### Team Details
 
-**Team Name**: Netra  
 **Organization Type**: Academic  
 **Organization Name**: Bennett University
 
@@ -82,12 +81,35 @@ Our solution addresses the critical challenge of categorizing cybercrime complai
 
 #### 2.2 Model Architecture
 
-**Model Composition**:
-1. **Primary Model**: Random Forest Classifier
-2. **Supporting Models**:
-    - BERT for complex classification scenarios
-    - Logistic Regression for rapid inference
-    - Ensemble voting mechanism
+Our dual-classification system employs an ensemble approach:
+
+
+```py
+class NetraClassifier:
+    def __init__(self):
+        self.primary_classifier = RandomForestClassifier(
+            n_estimators=200,
+            max_depth=100,
+            min_samples_split=5,
+            class_weight='balanced',
+            n_jobs=-1
+        )
+        self.secondary_classifier = Pipeline([
+            ('tfidf', TfidfVectorizer(
+                max_features=10000,
+                ngram_range=(1, 3),
+                use_idf=True
+            )),
+            ('classifier', RandomForestClassifier())
+        ])
+```
+
+**Model Composition**:\
+1. **Primary Model**: Random Forest Classifier\
+2. **Supporting Models**:\
+    - BERT for complex classification scenarios\
+    - Logistic Regression for rapid inference\
+    - Ensemble voting mechanism\
 
 ![Architecture Diagram of the Model Stack and Workflow](./images/architecture.png)
 
@@ -116,26 +138,23 @@ tfidf_params = {
 
 #### 2.3 Performance Metrics
 
-| Metric | Value |
-|--------|-------|
-| Accuracy | 89.5% |
-| Precision | 87.3% |
-| Recall | 86.9% |
-| F1-Score | 87.1% |
-| AUC-ROC | 0.912 |
+![Confusion Matrix](./images/confusion_matrix.png)
 
 ### 3. Key Insights
 
 #### 3.1 Cybercrime Category Distribution
 
-1. **Financial Fraud**: 42%
-2. **Identity Theft**: 28%
-3. **Social Media Crime**: 18%
-4. **Other Categories**: 12%
+1. **Online Financial Fraud**: 61.4% (56,718)
+2. **Online and Social Media Related Crime**: 12.8% (11,877)
+3. **Any Other Cyber Crime**: 9.9% (10,727)
+4. **Cyber Attack/Dependent Crimes**: 3.6% (36,08)
+5. **RapeGang Rape RGRSexually Abusive Content**: 3.1% (28,16)
+
+![Data Distribution by Category and Sub-Category](./images/cybercrime_bubble_chart.png)
 
 #### 3.2 Performance Observations
-- Exceptional accuracy in financial fraud detection (92%)
 - Challenges in rapidly evolving social media crime terminology
+- Really imbalanced data distribution for some categories (Online Financial Fraud, Online and Social Media Related Crime) and sub-categories (RapeGang Rape RGRSexually Abusive Content)
 - Robust handling of linguistic diversity
 
 ### 4. Deployment Strategy
@@ -157,13 +176,16 @@ tfidf_params = {
 ### 5. Technical Dependencies
 
 ```toml
-[dependencies]
+[tool.poetry.dependencies]
 python = "^3.11"
 nltk = "^3.9.1"
 pandas = "^2.2.3"
 scikit-learn = "^1.5.2"
 seaborn = "^0.13.2"
 numpy = "^2.1.2"
+fastapi = "^0.104.0"
+redis = "^5.0.1"
+torch = "^2.1.0"
 ```
 
 ### 6. Responsible AI Framework
@@ -180,7 +202,11 @@ numpy = "^2.1.2"
 - Automated PII detection
 - Periodic privacy impact assessments
 
-### 7. Originality Declaration
+### 7. Conclusion
+
+Netra represents a significant advancement in automated cybercrime classification, combining robust technical architecture with practical applicability. Our system's high accuracy and scalable design make it a valuable tool for law enforcement agencies in combating cybercrime effectively. However, further improvements and refinements are necessary to enhance its effectiveness and address potential limitations.
+
+### 8. Originality Declaration
 
 We affirm that this submission represents our original work. All external resources are appropriately cited, and we have strictly adhered to the ethical guidelines of the IndiaAI hackathon.
 
