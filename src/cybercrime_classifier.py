@@ -1,5 +1,8 @@
 import re
 import sys
+import logging
+import numpy as np
+from typing import Dict, Any
 
 import joblib
 import nltk
@@ -12,16 +15,14 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split, GridSearchCV
 from tqdm.auto import tqdm
-import logging
-
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s",
     handlers=[logging.FileHandler("testing.log"), logging.StreamHandler()],
 )
-
 
 class CybercrimeClassifier:
     def __init__(self, min_samples_per_class=2):
@@ -32,6 +33,9 @@ class CybercrimeClassifier:
 
         self.lemmatizer = WordNetLemmatizer()
         self.stop_words = set(stopwords.words("english"))
+        # Add domain-specific stop words
+        self.stop_words.update(['please', 'help', 'thank', 'thanks', 'sir', 'madam', 'kindly'])
+        
         self.label_encoders = {
             "category": LabelEncoder(),
             "sub_category": LabelEncoder(),
@@ -41,6 +45,111 @@ class CybercrimeClassifier:
             "sub_category": None
         }
         self.min_samples_per_class = min_samples_per_class
+        self.vectorizer_params = {
+            'max_features': 10000,  # Increased from 5000
+            'ngram_range': (1, 3),  # Added trigrams
+            'min_df': 2,
+            'max_df': 0.95,
+            'analyzer': 'word',
+            'token_pattern': r'\b\w+\b',  # Matches whole words
+        }
+
+    def preprocess_text(self, text: str) -> str:
+        """Enhanced text preprocessing with domain-specific cleaning"""
+        try:
+            if not isinstance(text, str):
+                text = str(text)
+
+            # Convert to lowercase
+            text = text.lower()
+            
+            # Remove URLs
+            text = re.sub(r'http\S+|www\S+', '', text)
+            
+            # Remove email addresses
+            text = re.sub(r'\S+@\S+', '', text)
+            
+            # Remove phone numbers (various formats)
+            text = re.sub(r'\+?\d{10,}|\+?\d{3}[-\s]?\d{3}[-\s]?\d{4}', '', text)
+            
+            # Replace multiple spaces with single space
+            text = re.sub(r'\s+', ' ', text)
+            
+            # Keep important punctuation that might indicate sentiment or emphasis
+            text = re.sub(r'[^a-zA-Z\s!?.]', '', text)
+
+            # Tokenize
+            tokens = word_tokenize(text)
+
+            # Remove stopwords and lemmatize, keep tokens longer than 2 characters
+            tokens = [
+                self.lemmatizer.lemmatize(token)
+                for token in tokens
+                if token not in self.stop_words and len(token) > 2
+            ]
+
+            # Add bigrams and trigrams for important phrases
+            bigrams = [f"{tokens[i]}_{tokens[i+1]}" for i in range(len(tokens)-1)]
+            trigrams = [f"{tokens[i]}_{tokens[i+1]}_{tokens[i+2]}" for i in range(len(tokens)-2)]
+            
+            processed_text = ' '.join(tokens + bigrams + trigrams)
+            
+            # Return empty string if processed text is too short
+            if len(processed_text.split()) < 3:
+                return ""
+                
+            return processed_text
+
+        except Exception as e:
+            logging.error(f"Error preprocessing text: {str(e)}")
+            return ""
+
+    def build_model(self, class_labels: np.ndarray) -> Pipeline:
+        """Create an improved classification pipeline with hyperparameter tuning"""
+        # Calculate class weights
+        n_samples = len(class_labels)
+        n_classes = len(np.unique(class_labels))
+        
+        # If severe class imbalance, adjust class weights
+        if n_classes > 1:
+            class_weights = dict(zip(
+                np.unique(class_labels),
+                n_samples / (n_classes * np.bincount(class_labels))
+            ))
+        else:
+            class_weights = None
+
+        pipeline = Pipeline([
+            ("tfidf", TfidfVectorizer(**self.vectorizer_params)),
+            ("classifier", RandomForestClassifier(
+                n_estimators=200,  # Increased from 100
+                max_depth=20,  # Added max_depth to prevent overfitting
+                min_samples_split=5,
+                min_samples_leaf=2,
+                random_state=42,
+                n_jobs=-1,
+                class_weight=class_weights,
+                bootstrap=True
+            ))
+        ])
+
+        # Define parameters for grid search
+        param_grid = {
+            'classifier__n_estimators': [100, 200],
+            'classifier__max_depth': [10, 20, None],
+            'classifier__min_samples_split': [2, 5],
+            'tfidf__max_features': [5000, 10000],
+            'tfidf__ngram_range': [(1, 2), (1, 3)]
+        }
+
+        return GridSearchCV(
+            pipeline,
+            param_grid,
+            cv=5,
+            n_jobs=-1,
+            verbose=1,
+            scoring='f1_weighted'
+        )
 
     def analyze_class_distribution(self, df):
         """Analyze and print class distribution information"""
@@ -149,25 +258,8 @@ class CybercrimeClassifier:
         
         return df
 
-    def build_model(self, class_labels):
-        """Create the classification pipeline"""
-        return Pipeline([
-            ("tfidf", TfidfVectorizer(
-                max_features=5000,
-                ngram_range=(1, 2),
-                min_df=2,
-                max_df=0.95
-            )),
-            ("classifier", RandomForestClassifier(
-                n_estimators=100,
-                random_state=42,
-                n_jobs=-1,
-                class_weight='balanced'
-            ))
-        ])
-
-    def train(self, train_df, test_df=None):
-        """Train the model using separate train and test files"""
+    def train(self, train_df: pd.DataFrame, test_df: pd.DataFrame = None) -> bool:
+        """Enhanced training with cross-validation and error analysis"""
         try:
             # Prepare training data
             prepared_train_df = self.prepare_data(train_df)
@@ -176,139 +268,139 @@ class CybercrimeClassifier:
                 raise ValueError(f"Not enough samples for training. Need at least {self.min_samples_per_class * 2} samples.")
             
             # Split features for training
-            X_train = prepared_train_df['processed_text']
+            X = prepared_train_df['processed_text']
             
-            # Train separate models for category and sub_category
+            # If no test set provided, create one
+            if test_df is None:
+                # Stratified split to maintain class distribution
+                X_train, X_val, y_train_dict, y_val_dict = {}, {}, {}, {}
+                
+                for column in ['category', 'sub_category']:
+                    y = prepared_train_df[f'{column}_encoded']
+                    X_train[column], X_val[column], y_train_dict[column], y_val_dict[column] = train_test_split(
+                        X, y, test_size=0.2, random_state=42, stratify=y
+                    )
+            else:
+                prepared_test_df = self.prepare_data(test_df)
+                X_val = {
+                    'category': prepared_test_df['processed_text'],
+                    'sub_category': prepared_test_df['processed_text']
+                }
+                y_val_dict = {
+                    'category': prepared_test_df['category_encoded'],
+                    'sub_category': prepared_test_df['sub_category_encoded']
+                }
+                X_train = {'category': X, 'sub_category': X}
+                y_train_dict = {
+                    'category': prepared_train_df['category_encoded'],
+                    'sub_category': prepared_train_df['sub_category_encoded']
+                }
+
+            # Train and evaluate models for each target
             for column in ['category', 'sub_category']:
                 print(f"\nTraining {column} model...", file=sys.stderr)
-                y_train = prepared_train_df[f'{column}_encoded']
                 
-                # Build and train the model
-                self.models[column] = self.build_model(self.label_encoders[column].classes_)
-                self.models[column].fit(X_train, y_train)
+                # Build and train the model with grid search
+                self.models[column] = self.build_model(y_train_dict[column])
+                self.models[column].fit(X_train[column], y_train_dict[column])
                 
-                # Evaluate on test data if provided
-                if test_df is not None:
-                    # Prepare test data with the same preprocessing
-                    prepared_test_df = self.prepare_data(test_df)
-                    X_test = prepared_test_df['processed_text']
-                    y_test = prepared_test_df[f'{column}_encoded']
-                    
-                    # Make predictions
-                    y_pred = self.models[column].predict(X_test)
-                    
-                    # Print evaluation metrics
-                    print(f"\n{column.upper()} Classification Report:", file=sys.stderr)
-                    print(classification_report(
-                        y_test,
-                        y_pred,
-                        target_names=self.label_encoders[column].classes_,
-                        zero_division=1
-                    ))
+                # Print best parameters
+                print(f"\nBest parameters for {column}:", file=sys.stderr)
+                print(self.models[column].best_params_, file=sys.stderr)
+                
+                # Make predictions and evaluate
+                y_pred = self.models[column].predict(X_val[column])
+                
+                # Print detailed evaluation metrics
+                print(f"\n{column.upper()} Classification Report:", file=sys.stderr)
+                print(classification_report(
+                    y_val_dict[column],
+                    y_pred,
+                    target_names=self.label_encoders[column].classes_,
+                    zero_division=1
+                ))
+                
+                # Error analysis
+                self._perform_error_analysis(
+                    X_val[column],
+                    y_val_dict[column],
+                    y_pred,
+                    self.label_encoders[column].classes_,
+                    column
+                )
             
             return True
 
         except Exception as e:
-            print(f"Error during training: {str(e)}", file=sys.stderr)
+            logging.error(f"Error during training: {str(e)}")
             raise
 
-    def predict(self, text):
-        """Predict category and sub_category for new text with handling for unseen labels"""
+    def _perform_error_analysis(self, X_val, y_true, y_pred, class_names, column):
+        """Analyze prediction errors to identify patterns"""
+        # Convert encoded labels back to original names
+        y_true_names = [class_names[i] for i in y_true]
+        y_pred_names = [class_names[i] for i in y_pred]
+        
+        # Find misclassified examples
+        errors = [(true, pred, text) for true, pred, text in zip(y_true_names, y_pred_names, X_val) if true != pred]
+        
+        if errors:
+            print(f"\nError Analysis for {column}:", file=sys.stderr)
+            print(f"Total errors: {len(errors)}", file=sys.stderr)
+            
+            # Analyze common misclassifications
+            misclass_pairs = [(true, pred) for true, pred, _ in errors]
+            common_errors = pd.DataFrame(misclass_pairs, columns=['True', 'Predicted']).value_counts().head()
+            
+            print("\nMost common misclassifications:", file=sys.stderr)
+            print(common_errors.to_string(), file=sys.stderr)
+
+    def predict(self, text: str) -> Dict[str, Any]:
+        """Enhanced prediction with confidence thresholds and error handling"""
         try:
-            # Preprocess the input text
             processed_text = self.preprocess_text(text)
+            if not processed_text:
+                return self._get_unknown_prediction()
 
             results = {}
-            # Make predictions for each model
             for column in ['category', 'sub_category']:
                 if self.models[column] is None:
                     raise ValueError(f"Model for {column} is not trained")
                 
                 try:
-                    # Get prediction and probabilities
-                    prediction = self.models[column].predict([processed_text])[0]
+                    # Get prediction probabilities
                     probas = self.models[column].predict_proba([processed_text])[0]
+                    max_proba = max(probas)
+                    prediction = self.models[column].predict([processed_text])[0]
                     
-                    # Ensure prediction is within known labels
-                    max_classes = len(self.label_encoders[column].classes_)
-                    if prediction >= max_classes:
-                        # !TODO: Handle this case
-                        continue
-                    
-                    # Convert prediction to label
-                    results[column] = self.label_encoders[column].classes_[prediction]
-                    results[f"{column}_confidence"] = float(probas[prediction])
+                    # Use confidence threshold
+                    if max_proba < 0.3:  # Adjusted confidence threshold
+                        results[column] = "Unknown"
+                        results[f"{column}_confidence"] = 0.0
+                    else:
+                        results[column] = self.label_encoders[column].classes_[prediction]
+                        results[f"{column}_confidence"] = float(max_proba)
                 
                 except Exception as e:
                     logging.error(f"Error predicting {column}: {str(e)}")
-                    # Fallback to "Unknown" category with 0 confidence
-                    results[column] = "Unknown"
-                    results[f"{column}_confidence"] = 0.0
+                    results.update(self._get_unknown_prediction(column))
 
             return results
 
         except Exception as e:
             logging.error(f"Error during prediction: {str(e)}")
-            # Return a complete result structure even in case of error
+            return self._get_unknown_prediction()
+
+    def _get_unknown_prediction(self, column: str = None) -> Dict[str, Any]:
+        """Helper method to return unknown prediction"""
+        if column:
             return {
-                "category": "Unknown",
-                "category_confidence": 0.0,
-                "sub_category": "Unknown",
-                "sub_category_confidence": 0.0
+                column: "Unknown",
+                f"{column}_confidence": 0.0
             }
-
-    def save_model(self, path):
-        """Save the trained model and label encoders"""
-        model_data = {
-            "models": self.models,
-            "label_encoders": self.label_encoders
+        return {
+            "category": "Unknown",
+            "category_confidence": 0.0,
+            "sub_category": "Unknown",
+            "sub_category_confidence": 0.0
         }
-        joblib.dump(model_data, path)
-        print(f"\nModel saved to {path}", file=sys.stderr)
-
-    @classmethod
-    def load_model(cls, path):
-        """Load a trained model"""
-        try:
-            model_data = joblib.load(path)
-            classifier = cls()
-            classifier.models = model_data["models"]
-            classifier.label_encoders = model_data["label_encoders"]
-            return classifier
-        except Exception as e:
-            print(f"Error loading model: {str(e)}", file=sys.stderr)
-            raise
-
-
-def main():
-    try:
-        # Load data
-        print("Loading data...", file=sys.stderr)
-        df = pd.read_csv("data/train.csv")
-        print(f"Loaded {len(df)} records", file=sys.stderr)
-
-        # Initialize and train classifier
-        classifier = CybercrimeClassifier(min_samples_per_class=5)  # Adjust this value as needed
-        classifier.train(df)
-
-        # Save the model
-        classifier.save_model("cybercrime_classifier.joblib")
-
-        # Example prediction
-        sample_text = """I had continue received random calls and abusive messages in my whatsapp 
-        Someone added my number in a unknown facebook group name with Only Girls and still getting 
-        calls from unknown numbers"""
-
-        prediction = classifier.predict(sample_text)
-        print("\nSample Prediction:", file=sys.stderr)
-        print("Sample Text:", sample_text, file=sys.stderr)
-        print(f"Category: {prediction['category']} (confidence: {prediction['category_confidence']:.2%})", file=sys.stderr)
-        print(f"sub_category: {prediction['sub_category']} (confidence: {prediction['sub_category_confidence']:.2%})", file=sys.stderr)
-
-    except Exception as e:
-        print(f"Error in main: {str(e)}", file=sys.stderr)
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
