@@ -18,6 +18,7 @@ logging.basicConfig(
     handlers=[logging.FileHandler("testing.log"), logging.StreamHandler()],
 )
 
+
 def plot_confusion_matrix(cm, classes, title, filename):
     """Plot and save confusion matrix"""
     plt.figure(figsize=(10, 8))
@@ -31,6 +32,7 @@ def plot_confusion_matrix(cm, classes, title, filename):
     plt.savefig(filename)
     plt.close()
 
+
 def test_model(model_path):
     try:
         logging.info("Starting model testing process...")
@@ -43,10 +45,12 @@ def test_model(model_path):
         logging.info("Loading test data...")
         test_df = pd.read_csv("data/test.csv")
 
-        test_df = test_df.rename(columns={
-            'sub_category': 'sub_category', 
-            'crimeaditionalinfo': 'processed_text'
-        })
+        test_df = test_df.rename(
+            columns={
+                "sub_category": "sub_category",
+                "crimeaditionalinfo": "processed_text",
+            }
+        )
 
         # Preprocess test data
         logging.info("Preprocessing test data...")
@@ -55,7 +59,7 @@ def test_model(model_path):
         # Get predictions and true values
         logging.info("Making predictions...")
         X_test = test_df["processed_text"]
-        
+
         # Create timestamp for unique filenames
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -64,27 +68,25 @@ def test_model(model_path):
 
         # Generate and save detailed metrics
         metrics_file = f"test_metrics_{timestamp}.txt"
-        
+
         with open(metrics_file, "w") as f:
-            for column in ['category', 'sub_category']:
+            for column in ["category", "sub_category"]:
                 # Get predictions for current model with tqdm progress bar
                 logging.info(f"Generating predictions for {column}...")
                 predictions = []
                 probabilities = []
-                
+
                 for text in tqdm(X_test, desc=f"Predicting {column}", unit="sample"):
                     pred = classifier.predict(text)
                     predictions.append(pred[column])
                     probabilities.append(pred[f"{column}_confidence"])
-                
+
                 # Get true labels
                 true_labels = test_df[column]
-                
+
                 # Classification report
                 report = classification_report(
-                    true_labels,
-                    predictions,
-                    output_dict=True
+                    true_labels, predictions, output_dict=True
                 )
 
                 # Save to results dictionary
@@ -96,11 +98,7 @@ def test_model(model_path):
 
                 # Generate confusion matrix
                 unique_labels = sorted(set(list(true_labels) + list(predictions)))
-                cm = confusion_matrix(
-                    true_labels, 
-                    predictions,
-                    labels=unique_labels
-                )
+                cm = confusion_matrix(true_labels, predictions, labels=unique_labels)
 
                 # Plot and save confusion matrix
                 plot_confusion_matrix(
@@ -126,7 +124,9 @@ def test_model(model_path):
         examples_file = f"example_predictions_{timestamp}.txt"
         with open(examples_file, "w") as f:
             f.write("Example Predictions:\n\n")
-            for idx in tqdm(sample_indices, desc="Generating Example Predictions", unit="sample"):
+            for idx in tqdm(
+                sample_indices, desc="Generating Example Predictions", unit="sample"
+            ):
                 text = test_df.iloc[idx]["crimeaditionalinfo"]
                 true_cat = test_df.iloc[idx]["category"]
                 true_subcat = test_df.iloc[idx]["sub_category"]
@@ -137,10 +137,14 @@ def test_model(model_path):
                 f.write(f"Text: {text}\n")
                 f.write(f"True Category: {true_cat}\n")
                 f.write(f"Predicted Category: {prediction['category']}\n")
-                f.write(f"Category Confidence: {prediction['category_confidence']:.2%}\n")
+                f.write(
+                    f"Category Confidence: {prediction['category_confidence']:.2%}\n"
+                )
                 f.write(f"True sub_category: {true_subcat}\n")
                 f.write(f"Predicted sub_category: {prediction['sub_category']}\n")
-                f.write(f"sub_category Confidence: {prediction['sub_category_confidence']:.2%}\n\n")
+                f.write(
+                    f"sub_category Confidence: {prediction['sub_category_confidence']:.2%}\n\n"
+                )
 
         logging.info("Testing completed successfully")
         logging.info(f"Metrics saved to: {metrics_file}")
@@ -152,6 +156,7 @@ def test_model(model_path):
     except Exception as e:
         logging.error(f"Error during testing: {str(e)}", exc_info=True)
         raise
+
 
 if __name__ == "__main__":
     try:
