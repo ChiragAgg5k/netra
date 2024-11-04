@@ -10,19 +10,29 @@
 **Team Members**:
 
 1. **Chirag Aggarwal**
-    - *Role*: Team Leader & ML Engineer
+    - *Role*: Team Leader
+    - *Profession*: B.Tech CSE student
     - *Expertise*: Deep Learning, Computer Vision, LLMs
     - *Contact*: [chiragaggarwal5k@gmail.com](mailto:chiragaggarwal5k@gmail.com)
     - *GitHub*: [ChiragAgg5k](https://github.com/ChiragAgg5k)
     - *LinkedIn*: [chiragagg5k](https://www.linkedin.com/in/chiragagg5k/)
 
 2. **Vaibhavee Singh**
-    - *Role*: ML Engineer, NLP Specialist
+    - *Role*: NLP Specialist
+    - *Profession*: B.Tech CSE student
     - *Expertise*: Natural Language Processing
     - *Contact*: [vaibhaveesingh89@gmail.com](mailto:vaibhaveesingh89@gmail.com)
     - *GitHub*: [Vaibhavee89](https://github.com/Vaibhavee89)
     - *LinkedIn*: [vaibhavee-singh](https://www.linkedin.com/in/vaibhavee-singh-1b7996252/)
     - *Publications*: [IEEE Profile](https://ieeexplore.ieee.org/author/950203643962224)
+
+3. **Dr. Yajnaseni Dash**
+    - *Role*: Team Mentor
+    - *Profession*: Assistant Professor, School of Artificial Intelligence
+    - *Expertise*: Artificial Neural Networks, Deep Learning
+    - *Contact*: [yajnaseni.dash@bennett.edu.in](mailto:yajnaseni.dash@bennett.edu.in)
+    - *LinkedIn*: [yajnaseni-dash](https://www.linkedin.com/in/yajnaseni-dash-18b73217/)
+    - *Publications*: [Google Scholar Profile](hhttps://scholar.google.com/citations?user=RybpkWEAAAAJ&hl=en&oi=ao)
 
 ### 1. Project Overview
 
@@ -71,11 +81,74 @@ Our solution addresses the critical challenge of categorizing cybercrime complai
 ![Data Distribution of Cybercrime Categories](./images/cybercrime_categories.png)
 ![Data Distribution of Cybercrime Subcategories](./images/cybercrime_subcategories.png)
 
-**NLP Processing Techniques**:
-- Advanced tokenization
-- Custom stop words filtering
-- WordNet lemmatization with POS tagging
-- Multi-level n-gram feature extraction
+**Text Preprocessing Algorithm**:
+
+##### Input
+- Raw text description of cybercrime incident
+
+##### Steps
+1. **Text Normalization**
+   - Convert text to lowercase
+   - Remove URLs using regex: `http\S+|www\S+`
+   - Remove email addresses: `\S+@\S+`
+   - Remove phone numbers: `\+?\d{10,}|\+?\d{3}[-\s]?\d{3}[-\s]?\d{4}`
+   - Remove special characters except punctuation: `[^a-zA-Z\s!?.]`
+   - Normalize whitespace: `\s+`
+
+2. **Tokenization & Cleaning**
+   ```py
+   For each text_description:
+       tokens = word_tokenize(text)
+       cleaned_tokens = []
+       
+       For each token in tokens:
+           If token not in stop_words AND len(token) > 2:
+               lemmatized_token = lemmatize(token)
+               cleaned_tokens.append(lemmatized_token)
+   ```
+
+3. **N-gram Generation**
+   ```py
+   For i in range(len(tokens) - 1):
+       bigram = f"{tokens[i]}_{tokens[i+1]}"
+       bigrams.append(bigram)
+   
+   For i in range(len(tokens) - 2):
+       trigram = f"{tokens[i]}_{tokens[i+1]}_{tokens[i+2]}"
+       trigrams.append(trigram)
+   ```
+
+### Output
+- Preprocessed text with unigrams, bigrams, and trigrams
+
+**Feature Extraction Algorithm**:
+
+##### Input
+- Preprocessed text documents
+
+##### Steps
+1. **TF-IDF Vectorization**
+   ```py
+   parameters = {
+       max_features: 10000
+       ngram_range: (1, 3)
+       min_df: 2
+       max_df: 0.95
+       analyzer: "word"
+       token_pattern: r"\b\w+\b"
+   }
+   
+   For each document in corpus:
+       1. Calculate term frequency (TF)
+       2. Calculate inverse document frequency (IDF)
+       3. Compute TF-IDF = TF * IDF
+       4. Apply feature selection based on max_features
+   ```
+
+2. **Feature Selection**
+   - Remove terms appearing in >95% of documents (max_df)
+   - Remove terms appearing in <2 documents (min_df)
+   - Keep top 10,000 features by TF-IDF score
 
 ![Data pipeline](./images/data-pipeline.png)
 
@@ -133,6 +206,36 @@ tfidf_params = {
     'min_df': 2,
     'max_df': 0.95,
     'use_idf': True
+}
+```
+
+**Prediction Algorithm**:
+
+### Input
+- Preprocessed text description
+
+### Steps
+```
+1. Preprocess input text using Text Preprocessing Algorithm
+2. Extract features using TF-IDF vectorizer
+3. For primary_classifier:
+    a. Get probability distributions
+    b. If max_probability < 0.3:
+        Return "Unknown"
+    c. Else:
+        prediction = class_with_max_probability
+4. For secondary_classifier:
+    a. Use primary category to select model
+    b. Get probability distributions
+    c. If max_probability < 0.3:
+        Return "Unknown"
+    d. Else:
+        prediction = class_with_max_probability
+5. Return {
+    "category": primary_prediction,
+    "category_confidence": primary_probability,
+    "sub_category": secondary_prediction,
+    "sub_category_confidence": secondary_probability
 }
 ```
 
