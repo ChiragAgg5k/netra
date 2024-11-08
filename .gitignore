@@ -173,3 +173,6 @@ cython_debug/
 # Matrics
 test_metrics_*.txt
 training_metrics_*.txt
+
+# Results
+/results
