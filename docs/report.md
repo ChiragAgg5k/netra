@@ -209,43 +209,76 @@ tfidf_params = {
 }
 ```
 
-**Prediction Algorithm**:
+#### 2.3 Algorithm
 
-### Input
-- Preprocessed text description
+```py
+1. Load Data:
+   train_df ← read_csv('train.csv')
+   test_df ← read_csv('test.csv')
+   combined_df ← concat(train_df, test_df)
 
-### Steps
+2. Remove Rare Classes:
+   min_instances ← 5
+   valid_categories ← filter(combined_df['category'], count >= min_instances)
+   valid_sub_categories ← filter(combined_df['sub_category'], count >= min_instances)
+   filtered_df ← combined_df with valid_categories and valid_sub_categories
+
+3. Clean Text Data:
+   Define clean_text():
+       Normalize to lowercase
+       Remove URLs, emails, phone numbers, special characters
+       Trim whitespace
+   Apply clean_text() to columns: 'crimeaditionalinfo', 'category', 'sub_category'
+
+4. Split Data:
+   X ← filtered_df['crimeaditionalinfo']
+   y ← filtered_df[['category', 'sub_category']]
+   X_train, X_test, y_train, y_test ← train_test_split(X, y, test_size=0.2)
+
+5. Define Text Processing Pipeline:
+   pipeline ← Pipeline([
+       ('tfidf', TfidfVectorizer(ngram_range=(1,3), min_df=2, max_df=0.95)),
+       ('clf', MultiOutputClassifier(RandomForestClassifier(random_state=42)))
+   ])
+
+6. Train Model:
+   pipeline.fit(X_train, y_train)
+
+7. Make Predictions:
+   y_pred ← pipeline.predict(X_test)
+
+8. Evaluate Performance:
+   For each target (category, sub_category):
+       accuracy ← accuracy_score(y_test[target], y_pred[target])
+       precision ← precision_score(y_test[target], y_pred[target], average='macro')
+       recall ← recall_score(y_test[target], y_pred[target], average='macro')
+       f1_score ← f1_score(y_test[target], y_pred[target], average='macro')
+
+   joint_accuracy ← mean(all(y_test == y_pred))
+
+9. Output Metrics:
+   Print accuracy, precision, recall, F1 score for each target.
+   Print joint_accuracy.
+
+10. Prepare for Deployment:
+   Serialize pipeline, validate predictions, and integrate with APIs.
+
 ```
-1. Preprocess input text using Text Preprocessing Algorithm
-2. Extract features using TF-IDF vectorizer
-3. For primary_classifier:
-    a. Get probability distributions
-    b. If max_probability < 0.3:
-        Return "Unknown"
-    c. Else:
-        prediction = class_with_max_probability
-4. For secondary_classifier:
-    a. Use primary category to select model
-    b. Get probability distributions
-    c. If max_probability < 0.3:
-        Return "Unknown"
-    d. Else:
-        prediction = class_with_max_probability
-5. Return {
-    "category": primary_prediction,
-    "category_confidence": primary_probability,
-    "sub_category": secondary_prediction,
-    "sub_category_confidence": secondary_probability
-}
-```
 
-#### 2.3 Performance Metrics
+#### 2.4 Performance Metrics
 
 ![Confusion Matrix](./images/confusion_matrix.png)
 
+| Target | Accuracy | Precision | Recall | F1-Score |
+|--------|----------|-----------|--------|----------|
+| Category | 0.762 | 0.508 | 0.265 | 0.277 |
+| Sub-Category | 0.514 | 0.368 | 0.158 | 0.173 |
+
+Joint Accuracy: 0.462
+
 ### 3. Key Insights
 
-#### 3.1 Cybercrime Category Distribution
+Distrubution of top 5 categories:
 
 1. **Online Financial Fraud**: 61.4% (56,718)
 2. **Online and Social Media Related Crime**: 12.8% (11,877)
@@ -253,12 +286,9 @@ tfidf_params = {
 4. **Cyber Attack/Dependent Crimes**: 3.6% (36,08)
 5. **RapeGang Rape RGRSexually Abusive Content**: 3.1% (28,16)
 
-![Data Distribution by Category and Sub-Category](./images/cybercrime_bubble_chart.png)
+This shows that the data is highly imbalanced for some categories and sub-categories, leading the model to generate biased predictions.
 
-#### 3.2 Performance Observations
-- Challenges in rapidly evolving social media crime terminology
-- Really imbalanced data distribution for some categories (Online Financial Fraud, Online and Social Media Related Crime) and sub-categories (RapeGang Rape RGRSexually Abusive Content)
-- Robust handling of linguistic diversity
+![Data Distribution by Category and Sub-Category](./images/cybercrime_bubble_chart.png)
 
 ### 4. Deployment Strategy
 
