@@ -1,8 +1,4 @@
-# IndiaAI CyberGuard AI Hackathon Submission
-
-<img src="assets/indiaai-poster.png" alt="India AI Poster" width="300"/>
-
-## Netra - AI-Powered Cybercrime Classification System
+# Netra - AI-Powered Cybercrime Classification System
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -24,50 +20,30 @@ Netra is an advanced cybercrime classification system that uses Natural Language
 
 ### Prerequisites
 
-- Python 3.8+
-- pip package manager
-- Poetry package manager
+- Python 3.11+
+- [UV package manager](https://github.com/astral-sh/uv)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/netra.git
+git clone https://github.com/ChiragAgg5k/netra.git
 cd netra
 
 # Create and activate virtual environment
-poetry shell
-
-# Install dependencies
-poetry install
+uv sync
 ```
 
-### Basic Usage
+## What does the repository contain?
 
-```python
-from netra.classifier import CybercrimeClassifier
+1. The `src/` directory contains various ipynb notebooks for the project, including a SVM, Random Forest and Multi-Vote architecture for training and testing the pipeline.
 
-# Initialize the classifier
-classifier = CybercrimeClassifier()
+2. `data/` folder contains `test.csv` and `train.csv` files for training and testing the pipeline. These files were obtained from the [IndiaAI CyberGuard Hackathon](https://indiaai.gov.in/article/indiaai-launches-cyberguard-ai-cybercrime-prevention-hackathon).
 
-# Predict category for a complaint
-text = "Someone created a fake profile using my photos on Instagram"
-category, sub_category = classifier.predict(text)
-```
-
-## Requirements
-
-```text
-python = "^3.11"
-nltk = "^3.9.1"
-pandas = "^2.2.3"
-scikit-learn = "^1.5.2"
-seaborn = "^0.13.2"
-numpy = "^2.1.2"
-```
+3. `assets/` folder contains the graphs generated in the notebooks.
 
 ## Contact
 
 For any queries or support:
 - Email: chiragaggarwal5k@gmail.com
-- GitHub Issues: [Create an issue](https://github.com/yourusername/netra/issues)
+- GitHub Issues: [Create an issue](https://github.com/ChiragAgg5k/netra/issues)
